@@ -16,6 +16,7 @@ unsigned long simple_hash(const char* str){
 HashMap* hashmap_create(){
 
     HashMap* new = (HashMap*)malloc(sizeof(HashMap));
+    /*?? peut etre initialiser a 0 ?*/
     new->size = TABLESIZE;
     new->table = calloc(new->size, sizeof(HashEntry));
     return new;
