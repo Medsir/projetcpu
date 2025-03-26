@@ -104,11 +104,13 @@ int remove_segment(MemoryHandler* handler, const char *name){
             toDelete->suiv = listeSeg->suiv;
             fusion_segments(listeSeg, toDelete); /*ici : on fusionne le segment libre avec le segment désalloué en ayant relié avec le segment suivant*/
             return 1;
-        }else{
-            //simplement ajouter le segment a la liste des segments libres
-            //to do
         }
         listeSeg = listeSeg->suiv;
     }
+    /* On n'a pas trouvé de segment libre fusionnable
+    on ajoute le segment libre à la liste des segments libres */
+    toDelete->suiv = handler->free_list;
+    handler->free_list = toDelete;
+    return 1;
 }
 
