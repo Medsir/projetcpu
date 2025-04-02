@@ -4,13 +4,7 @@
 
 int main(){
     HashMap* memory_locations = hashmap_create();
-    printf("Hashmap cree.\n");
-
-    parse_data_instruction("X DW 15", memory_locations);
-
-    char* x = (char*)hashmap_get(memory_locations, "X");
-    printf("X = %d\n", x);
-
+    parse_code_instruction("loop: MOV AX,6", memory_locations, 10);
 
     return 0;
 }

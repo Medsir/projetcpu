@@ -20,8 +20,6 @@ Instruction* parse_data_instruction(const char *line, HashMap* memory_locations)
     char buffer2[20];
     int elements_count = 0;
     if(sscanf(inst->operand2, "%s,%s", buffer, buffer2)>1){
-
-        printf("Array\n");
         char c = ' ';
         int i=0;
         while(c != '/0'){
@@ -36,13 +34,21 @@ Instruction* parse_data_instruction(const char *line, HashMap* memory_locations)
         elements_count++;
     }
     else{
-        printf("No array\n");
         elements_count = 1;
     }
     hashmap_insert(memory_locations, inst->mnemonic, last_adress_used);
     last_adress_used = elements_count;
-    printf("last used %d\n", last_adress_used);
     return inst;
 }
 
 
+Instruction* parse_code_instruction(const char* line, HashMap *labels, int code_count){
+    Instruction* inst = (Instruction*)malloc(sizeof(Instruction));
+    char* label = malloc(20);
+
+    sscanf(line, "%s: %s %s,%s\n", label, inst->mnemonic, inst->operand1, inst->operand2);
+
+
+    return inst;
+
+}

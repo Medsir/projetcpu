@@ -18,4 +18,5 @@ typedef struct{
 } ParserResult;
 
 Instruction* parse_data_instruction(const char *line, HashMap* memory_locations);
+Instruction* parse_code_instruction(const char* line, HashMap *labels, int code_count);
 #endif
