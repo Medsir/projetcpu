@@ -20,6 +20,6 @@ HashMap* hashmap_create();
 int hashmap_insert(HashMap* map, const char* key, void *value);
 void* hashmap_get(HashMap* map, const char* key);
 int hashmap_remove(HashMap *map, const char* key);
-
+void hashmap_destroy(HashMap* map);
 
 #endif

@@ -53,8 +53,7 @@ void hashmap_destroy(HashMap* map){
     for(int i; i<map->size; i++){
         free(map->table[i].key);
         free(map->table[i].value);
-        map->table[i].key = NULL;
-        map->table[i].value = NULL;
     }
+    free(map->table);
     free(map);
 }

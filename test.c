@@ -3,8 +3,8 @@
 #include <stdio.h>
 
 int main(){
-    HashMap* memory_locations = hashmap_create();
-    parse_code_instruction("loop: MOV AX,6", memory_locations, 10);
 
+
+    ParserResult* result = parse("test_parse.txt");
     return 0;
 }

@@ -1,6 +1,5 @@
 CC = gcc
 CFLAGS = -c
-LDFLAGS = 
 
 all: main
 
@@ -24,7 +23,7 @@ test.o: test.c hash.h segment.h parser.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 test: hash.o parser.o test.o
-	$(CC) $(LDFLAGS) -o test hash.o parser.o test.o 
+	$(CC) -o test hash.o parser.o test.o 
 
 clean:
 	rm -f *.o
