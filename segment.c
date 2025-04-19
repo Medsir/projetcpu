@@ -114,4 +114,3 @@ int remove_segment(MemoryHandler* handler, const char *name){
     handler->free_list = toDelete;
     return 1;
 }
-
