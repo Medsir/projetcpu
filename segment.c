@@ -10,7 +10,7 @@ MemoryHandler *memory_init(int size){
     handler->free_list->size = size;
     handler->allocated = hashmap_create();
     handler->allocated->size = size;
-    handler->memory = (void**)malloc(sizeof(void*)*size)
+    handler->memory = (void**)malloc(sizeof(void*)*size);
     return handler;
 }
 
@@ -18,7 +18,7 @@ MemoryHandler *memory_init(int size){
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev){
     Segment* prev = NULL;
     Segment* tmp = handler->free_list;
-    while(tmp){
+    while(tmp && tmp->next){
         if((tmp->next->start <= start) && (tmp->size >= start+size)){
             return tmp;
         }
@@ -31,6 +31,7 @@ Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment*
 int create_segment(MemoryHandler *handler, const char *name, int start, int size){
     Segment* prev = NULL;
     Segment* freeSeg = find_free_segment(handler, start, size, &prev);
+    int total_free_size;
     if(freeSeg == NULL){
         return 0;
     }
@@ -42,9 +43,9 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     if((freeSeg->start == start) && (freeSeg->size == size)){
         //supprimer le free seg et relier
         if(prev){
-            prev->suiv = freeSeg->suiv;
+            prev->next = freeSeg->next;
         }else{
-            handler->free_list = freeSeg->suiv;
+            handler->free_list = freeSeg->next;
         }
         free(freeSeg);
         //inserer dans la hashmap
@@ -68,15 +69,15 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     if((freeSeg->start == start) && (freeSeg->size > size)){
         //split le free seg (créer deux free seg et supprimer le seg)
             total_free_size = freeSeg->size;
-            freeSeg->size = newSeg->start - freeSeg->start
+            freeSeg->size = newSeg->start - freeSeg->start;
 
             Segment* rightSeg = (Segment*)malloc(sizeof(Segment));
-            rightSeg->start = start + size
+            rightSeg->start = start + size;
             rightSeg->size = total_free_size - size - freeSeg->size;
 
             //inserer nouveau free seg (relier les pointeurs)
-            rightSeg->suiv = freeSeg->suiv;
-            freeSeg->suiv = rightSeg;
+            rightSeg->next = freeSeg->next;
+            freeSeg->next = rightSeg;
         //inserer dans la hashmap
         hashmap_insert(handler->allocated, name, newSeg);
         return 1;
@@ -86,30 +87,30 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
 
 void fusion_segments(Segment* s1, Segment*s2){
     //on suppose que la fonction est correctement utilisée
-    s1->size = s1->size + s2.size;
-    s1->suiv = s2->suiv;
+    s1->size = s1->size + s2->size;
+    s1->next = s2->next;
     free(s2);
 }
 
 int remove_segment(MemoryHandler* handler, const char *name){
     Segment* toDelete = (Segment*)hashmap_get(handler, name);
-    delStart = toDelete->start;
-    delSize = toDelete->size;
+    int delStart = toDelete->start;
+    int delSize = toDelete->size;
     
     Segment* listeSeg = handler->free_list;
     while(listeSeg){
         if((listeSeg->start + listeSeg->size) == (toDelete->start-1)){
             //on a trouvé un segment libre fusionnable AVANT le segment a supprimer
             //on relie le suivant pour pouvoir fusionner
-            toDelete->suiv = listeSeg->suiv;
+            toDelete->next = listeSeg->next;
             fusion_segments(listeSeg, toDelete); /*ici : on fusionne le segment libre avec le segment désalloué en ayant relié avec le segment suivant*/
             return 1;
         }
-        listeSeg = listeSeg->suiv;
+        listeSeg = listeSeg->next;
     }
     /* On n'a pas trouvé de segment libre fusionnable
     on ajoute le segment libre à la liste des segments libres */
-    toDelete->suiv = handler->free_list;
+    toDelete->next = handler->free_list;
     handler->free_list = toDelete;
     return 1;
 }

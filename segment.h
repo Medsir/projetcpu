@@ -6,7 +6,7 @@
 typedef struct segment{
     int start; //Position du début (adresse) du segment dans la mémoire
     int size; // Taille du segement (en unités de memoire)
-    struct Segment *next; //pointeur vers le segment suivant 
+    struct segment* next; //pointeur vers le segment suivant 
 }Segment;
 
 typedef struct memoryhandler{
