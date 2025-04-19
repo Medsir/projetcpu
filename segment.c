@@ -10,10 +10,24 @@ MemoryHandler *memory_init(int size){
     handler->free_list->size = size;
     handler->allocated = hashmap_create();
     handler->allocated->size = size;
-    handler->memory = (void**)malloc(sizeof(void*)*size);
+    handler->memory = (void**)calloc(size, sizeof(void*));
     return handler;
 }
 
+void free_memory(MemoryHandler* mem){
+    Segment* tmp = mem->free_list;
+    while(tmp){
+        mem->free_list = mem->free_list->next;
+        free(tmp);
+        tmp = mem->free_list;
+    }
+    hashmap_destroy(mem->allocated);
+    
+    for(int i=0; i<mem->allocated->size; i++){
+        if(mem->memory[i]) free(mem->memory[i]);
+    }
+    free(mem->memory);
+}
 
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev){
     Segment* prev = NULL;

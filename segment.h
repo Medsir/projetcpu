@@ -17,6 +17,7 @@ typedef struct memoryhandler{
 } MemoryHandler;
 
 MemoryHandler *memory_init(int size);
+void free_memory(MemoryHandler* mem);
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev);
 int create_segment(MemoryHandler *handler, const char *name, int start, int size);
 
