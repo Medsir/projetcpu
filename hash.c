@@ -36,8 +36,11 @@ int hashmap_insert(HashMap* map, const char* key, void *value){
 
 void* hashmap_get(HashMap* map, const char* key){
     int index = simple_hash(key);
-    void *data = map->table[index].value;
-    return data;
+    if(map->size > index){
+        void *data = map->table[index].value;
+        return data;
+    }
+    return NULL;
 }
 
 int hashmap_remove(HashMap *map, const char* key){

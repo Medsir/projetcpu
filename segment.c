@@ -1,5 +1,6 @@
 #include "segment.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 
 MemoryHandler *memory_init(int size){
@@ -109,7 +110,7 @@ void fusion_segments(Segment* s1, Segment*s2){
 }
 
 int remove_segment(MemoryHandler* handler, const char *name){
-    Segment* toDelete = (Segment*)hashmap_get(handler, name);
+    Segment* toDelete = (Segment*)hashmap_get(handler->allocated, name);
     int delStart = toDelete->start;
     int delSize = toDelete->size;
     

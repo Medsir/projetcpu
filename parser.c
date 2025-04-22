@@ -26,7 +26,7 @@ Instruction* parse_data_instruction(const char *line, HashMap* memory_locations)
         free(token);
     }
     free(tmp);
-    hashmap_insert(memory_locations, inst->mnemonic, last_adress_used);
+    hashmap_insert(memory_locations, inst->mnemonic, &last_adress_used);
     return inst;
 }
 
@@ -99,7 +99,7 @@ ParserResult* parse(const char* filename){
         printf("Entree dans .CODE\n");
     }
     else{
-        printf(stderr, "Erreur dans parse(%s)\n", filename);
+        fprintf(stderr, "Erreur dans parse(%s)\n", filename);
         return NULL;
     }
     /*Après la ligne .CODE*/

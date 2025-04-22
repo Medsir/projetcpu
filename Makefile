@@ -16,6 +16,9 @@ parser.o: parser.c parser.h
 cpu.o: cpu.c cpu.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+addressing.o: addressing.c addressing.h 
+	$(CC) $(CFLAGS) -o $@ $<
+
 main.o: main.c hash.h segment.h parser.h
 	$(CC) $(CFLAGS) -o $@ $<
 

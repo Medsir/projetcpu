@@ -5,12 +5,7 @@
 #include <stdio.h>
 
 int main(){
-    CPU* cpu = cpu_init(1024);
-    Instruction* inst = parse_data_instruction("MOV AX 10,20,30,40", cpu->memory_handler->allocated);
-    
-    allocate_variables(cpu, &inst, 1);
-    print_data_segment(cpu);
-
+    CPU* cpu = setup_test_environnement();
 
     return 0;
 }
