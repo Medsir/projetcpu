@@ -6,6 +6,6 @@
 
 int main(){
     CPU* cpu = setup_test_environnement();
-
+    cpu_destroy(cpu);
     return 0;
 }

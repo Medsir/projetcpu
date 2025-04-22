@@ -14,6 +14,39 @@ CPU *cpu_init(int memory_size){
     return cpu;
 }
 
+CPU* setup_test_environnement(){
+    //Initialiser le CPU
+    CPU* cpu = cpu_init(1024);
+    if(!cpu){
+        fprintf(stderr, "Error : CPU initialization failed\n");
+        return NULL;
+    }
+    //Initialiser les registres avec des valeurs specifiques
+    int *ax = (int *)hashmap_get(cpu->context, "AX");
+    int *bx = (int *)hashmap_get(cpu->context, "BX");
+    int *cx = (int *)hashmap_get(cpu->context, "CX");
+    int *dx = (int *)hashmap_get(cpu->context, "DX");
+
+    *ax = 3;
+    *bx = 6;
+    *cx = 100;
+    *dx = 0;
+    //Creer et initialiser le segment de données
+    if(!hashmap_get(cpu->memory_handler->allocated, "DS")){
+        create_segment(cpu->memory_handler, "DS", 0, 20);
+        
+        //Initialiser le segment de donnees avec des valeurs de test
+        for(int i=0; i<10; i++){
+            int* value = (int*)malloc(sizeof(int));
+            *value = i*10 + 5; //Valeurs 5, 15, 25, 35
+            store(cpu->memory_handler, "DS", i, value);
+        }
+
+    }
+    printf("Test environnement initialized.\n");
+    return cpu;
+}
+
 CPU* cpu_destroy(CPU* cpu){
     free_memory(cpu->memory_handler);
     hashmap_destroy(cpu->context);
@@ -87,35 +120,64 @@ void print_data_segment(CPU* cpu){
     printf("\nDimensions : [%d, %d]\n", data->start, data->start+data->size-1);
 }
 
-CPU* setup_test_environnement(){
-    //Initialiser le CPU
-    CPU* cpu = cpu_init(1024);
-    if(!cpu){
-        fprintf(stderr, "Error : CPU initialization failed\n");
-        return NULL;
-    }
-    //Initialiser les registres avec des valeurs specifiques
-    int *ax = (int *)hashmap_get(cpu->context, "AX");
-    int *bx = (int *)hashmap_get(cpu->context, "BX");
-    int *cx = (int *)hashmap_get(cpu->context, "CX");
-    int *dx = (int *)hashmap_get(cpu->context, "DX");
+char* trim(char* str){
+    while(*str == ' '|| *str == '\t' || *str == '\n' || *str == '\r') str++;
 
-    *ax = 3;
-    *bx = 6;
-    *cx = 100;
-    *dx = 0;
-    //Creer et initialiser le segment de données
-    if(!hashmap_get(cpu->memory_handler->allocated, "DS")){
-        create_segment(cpu->memory_handler, "DS", 0, 20);
-        
-        //Initialiser le segment de donnees avec des valeurs de test
-        for(int i=0; i<10; i++){
-            int* value = (int*)malloc(sizeof(int));
-            *value = i*10 + 5; //Valeurs 5, 15, 25, 35
-            store(cpu->memory_handler, "DS", i, value);
+    char* end = str + strlen(str) - 1;
+    while(end > str && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')){
+        *end = '\0';
+        end--;
+    }
+    return str;
+}
+
+int search_and_replace(char** str, HashMap *values){
+    if(!str || !*str || !values) return 0;
+
+    int replaced = 0;
+    char* input = *str;
+    
+    //Iterate throug all keys in the hashmap
+    for(int i=0; i < values->size; i++){
+        if(values->table[i].key && values->table[i].key != TOMBSTONE){
+            char *key = values->table[i].key;
+            int value = (int)(long)values->table[i].value;
+
+            //Find potential substring match
+            char* substr = strstr(input, key);
+            if(substr){
+                //Construct replacement buffer
+                char replacement[64];
+                snprintf(replacement, sizeof(replacement), "%d", value);
+
+                //Calculate lengths
+                int key_len = strlen(key);
+                int repl_len = strlen(replacement);
+                int remain_len = strlen(substr + key_len);
+
+                //Create new string
+                char *new_str = (char *)malloc(strlen(input) - key_len + repl_len + 1);
+                strncpy(new_str, input, substr - input);
+                new_str[substr - input] = '\0';
+                strcat(new_str, replacement);
+                strcat(new_str, substr + key_len);
+
+                //free and update original string
+                free(input);
+                *str = new_str;
+                input = new_str;
+
+                replaced = 1;
+            }
         }
-
     }
-    printf("Test environnement initialized.\n");
-    return cpu;
+
+    //Trim the final string
+    if(replaced){
+        char *trimmed = trim(input);
+        if(trimmed != input){
+            memmove(input, trimmed, strlen(trimmed) + 1);
+        }
+    }
+    return replaced;
 }
