@@ -20,5 +20,6 @@ MemoryHandler *memory_init(int size);
 void free_memory(MemoryHandler* mem);
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev);
 int create_segment(MemoryHandler *handler, const char *name, int start, int size);
-
+void fusion_segments(Segment* s1, Segment*s2);
+int remove_segment(MemoryHandler* handler, const char *name);
 #endif

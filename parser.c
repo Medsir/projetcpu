@@ -8,17 +8,17 @@ int last_adress_used = 0;
 
 Instruction* parse_data_instruction(const char *line, HashMap* memory_locations){
     Instruction* inst = (Instruction*)malloc(sizeof(Instruction));
-    inst->mnemonic = (char*)malloc(20);
-    inst->operand1 = (char*)malloc(20);
-    inst->operand2 = (char*)malloc(20);
-    sscanf(line, "%s %s %s\n", inst->mnemonic, inst->operand1, inst->operand2);
+    char* tmp = strdup(line);
+    inst->mnemonic = strdup(strtok(tmp, " "));
+    inst->operand1 = strdup(strtok(NULL, " "));
+    inst->operand2 = strdup(strtok(NULL, " "));
 
-    printf("mnemonic : %s | operand1 : %s | operand2 : %s\n", inst->mnemonic, inst->operand1, inst->operand2);
+    free(tmp);
 
     /*parser un potentiel array (trouver le nombre d'éléments)*/
     int elements_count = 0;
  
-    char* tmp = strdup(inst->operand2);
+    tmp = strdup(inst->operand2);
     char* token = strdup(strtok(tmp, ","));
     while(token!=NULL){
         elements_count++;
@@ -27,7 +27,6 @@ Instruction* parse_data_instruction(const char *line, HashMap* memory_locations)
     }
     free(tmp);
     hashmap_insert(memory_locations, inst->mnemonic, last_adress_used);
-    last_adress_used += elements_count;
     return inst;
 }
 

@@ -8,6 +8,7 @@ MemoryHandler *memory_init(int size){
     handler->free_list = (Segment*)malloc(sizeof(Segment));
     handler->free_list->start = 0;
     handler->free_list->size = size;
+    handler->free_list->next = NULL;
     handler->allocated = hashmap_create();
     handler->allocated->size = size;
     handler->memory = (void**)calloc(size, sizeof(void*));
@@ -30,15 +31,15 @@ void free_memory(MemoryHandler* mem){
 }
 
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev){
-    Segment* prev = NULL;
     Segment* tmp = handler->free_list;
-    while(tmp && tmp->next){
-        if((tmp->next->start <= start) && (tmp->size >= start+size)){
-            return tmp;
+    while(tmp->next){
+        if((tmp->next->start <= start) && (tmp->next->size >= start+size)){
+            (*prev) = tmp;
+            return tmp->next;
         }
-        (*prev) = tmp;
         tmp = tmp->next;
     }
+    if(tmp) return tmp;
     return NULL;
 }
 
@@ -53,7 +54,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     newSeg->start = start;
     newSeg->size = size;
     newSeg->next = NULL;
-
+    
     if((freeSeg->start == start) && (freeSeg->size == size)){
         //supprimer le free seg et relier
         if(prev){
@@ -96,6 +97,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
         hashmap_insert(handler->allocated, name, newSeg);
         return 1;
     }
+    printf("segment non alloue");
     return 0;
 }
 

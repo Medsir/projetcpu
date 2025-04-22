@@ -2,6 +2,8 @@
 #define PAR
 #include "segment.h"
 
+int last_adress_used;
+
 typedef struct{
     char *mnemonic;
     char *operand1;
