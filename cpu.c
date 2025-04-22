@@ -10,6 +10,9 @@ CPU *cpu_init(int memory_size){
     hashmap_insert(cpu->context, "BX", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "CX", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "DX", calloc(sizeof(int), 1));
+    hashmap_insert(cpu->context, "IP", calloc(sizeof(int), 1));
+    hashmap_insert(cpu->context, "ZF", calloc(sizeof(int), 1));
+    hashmap_insert(cpu->context, "SF", calloc(sizeof(int), 1));
     cpu->constant_pool = hashmap_create();
     return cpu;
 }
@@ -181,3 +184,35 @@ int search_and_replace(char** str, HashMap *values){
     }
     return replaced;
 }
+
+int resolve_constants(ParserResult* result){
+    Instruction* curr;
+    int res = 0;
+    for(int i=0; i<result->data_count; i++){
+        curr = result->data_instructions[i];
+        res += search_and_replace(&curr->operand2, result->memory_locations);
+    }
+
+    for(int i=0; i<result->code_count; i++){
+        curr = result->code_instructions[i];
+        res += search_and_replace(&curr->operand1, result->labels);
+    }
+    return res;
+}
+
+void allocate_code_segment(CPU* cpu, Instruction** code_instructions, int code_count){
+
+    //Créer le segment .CODE
+    create_segment(cpu->memory_handler, "CS", last_adress_used, code_count);
+    last_adress_used += code_count;
+
+    //Inserer les instructions dans la mémoire
+    for(int i=0; i<code_count; i++){
+        cpu->memory_handler->memory[i+last_adress_used] = code_instructions[i];
+    }
+
+    //Initiliasier le pointeur d'instructions à 0
+    int* ip = (int*)hashmap_get(cpu->context, "IP");
+    *ip = 0;
+}
+

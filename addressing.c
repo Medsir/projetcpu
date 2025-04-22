@@ -17,7 +17,9 @@ void* immediate_addressing(CPU* cpu, char* operand){
         void* data = hashmap_get(cpu->constant_pool, operand);
         if(!data){
             /*Cas où la valeur n'y est pas déjà stockée*/
-            hashmap_insert(cpu->constant_pool, operand, operand);
+            int* constant = (int*)malloc(sizeof(int));
+            *constant = atoi(operand);
+            hashmap_insert(cpu->constant_pool, operand, constant);
             return operand;
         }
         else{
@@ -93,4 +95,83 @@ void* resolve_addressing(CPU* cpu, const char* operand){
     if(matches("\[[0-9]*\]", operand)) return memory_direct_addressing(cpu, operand);
     if(matches("\[[A-Z]{2}\]", operand)) return register_indirect_addressing(cpu, operand);
     return NULL;
+}
+
+int handle_instruction(CPU* cpu, Instruction* instr, void* src, void* dest){
+    if(strcmp(instr->mnemonic, "MOV")==0){
+        handle_MOV(cpu, src, dest);
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "ADD")==0){
+        *(int*)dest = *(int*)src + *(int*)dest;
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "CMP")==0){
+        int* zf = (int*)hashmap_get(cpu->context,"ZF");
+        int* sf = (int*)hashmap_get(cpu->context,"SF");
+        int res = *(int*)dest - *(int*)src;
+        if(res == 0){
+            *zf = 1;
+        }else if (res < 0){
+            *sf = 1;
+        }
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "JMP")==0){
+        int address = atoi(instr->operand1);
+        int* ip = (int*)hashmap_get(cpu->context,"IP");
+        *ip = address;
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "JZ")==0){
+        int address = atoi(instr->operand1);
+        int* zf = (int*)hashmap_get(cpu->context,"ZF");
+        int* ip = (int*)hashmap_get(cpu->context,"IP");
+        if(*zf == 1){
+            *ip = address;
+        }
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "JNZ")==0){
+        int address = atoi(instr->operand1);
+        int* zf = (int*)hashmap_get(cpu->context,"ZF");
+        int* ip = (int*)hashmap_get(cpu->context,"IP");
+        if(*zf == 0){
+            *ip = address;
+        }
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "HALT")==0){
+        int* ip = (int*)hashmap_get(cpu->context,"IP");
+        Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
+        *ip = cs->start+cs->size;
+        return 1;    
+    }
+    return 0;
+}
+
+int execute_instruction(CPU* cpu, Instruction *instr){
+    void* addr1 = resolve_addressing(cpu, instr->operand1);
+    void* addr2 = resolve_addressing(cpu, instr->operand2);
+    handle_instruction(cpu, instr, addr1, addr2);
+    return 0;
+}
+
+Instruction* fetch_next_instruction(CPU* cpu){
+    //Récupérer l'instruction actuelle
+    int* ip = (int*)hashmap_get(cpu->context,"IP");
+    
+    Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
+
+    //Verifier les dimensions
+    if(!cs) return NULL;
+    if((*ip >=cs->start + cs->size) || (*ip < cs->start)) return NULL;
+    if(*ip+1 >= cs->start + cs->size) return NULL;
+
+    *ip++;
+    return (Instruction*)cpu->memory_handler->memory[*ip];
+}
+
+int run_program(CPU* cpu){
+    
 }

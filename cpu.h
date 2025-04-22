@@ -14,6 +14,9 @@ typedef struct{
 } CPU;
 
 
+int search_and_replace(char** str, HashMap *values);
+char* trim(char* str);
+
 CPU *cpu_init(int memory_size);
 CPU* cpu_destroy(CPU* cpu);
 void* store(MemoryHandler *handler, const char *segment_name, int pos, void *data);
@@ -21,4 +24,5 @@ void* load(MemoryHandler *handler, const char* segment_name, int pos);
 void allocate_variables(CPU *cpu, Instruction** data_instructions, int data_count);
 void print_data_segment(CPU* cpu);
 CPU* setup_test_environnement();
+int resolve_constants(ParserResult* result);
 #endif
