@@ -17,7 +17,6 @@ HashMap* hashmap_create(){
 
     HashMap* new = (HashMap*)malloc(sizeof(HashMap));
     /*?? peut etre initialiser a 0 ?*/
-    //mais le key c char non ?
     new->size = TABLESIZE;
     new->table = calloc(new->size, sizeof(HashEntry));
     return new;
@@ -27,8 +26,8 @@ int hashmap_insert(HashMap* map, const char* key, void *value){
     int index = simple_hash(key);
     int i = index;
     while(map->table[i].key != 0){
+        if(i=index){return 0;}
         i=(i+1)%map->size;
-        if(i==index){return 0;}
     }
     map->table[i].key = strdup(key);
     map->table[i].value = value;
@@ -45,12 +44,9 @@ void* hashmap_get(HashMap* map, const char* key){
 }
 
 int hashmap_remove(HashMap *map, const char* key){
-    //il faut pas utiliser le TOMBSTONE dans cette fonction ?
     int index = simple_hash(key);
     free(map->table[index].key);
     free(map->table[index].value);
-
-    //on ne peut pas mettre la valeur à null, car à la base c'est 0. voir ligne 22.
     map->table[index].key = NULL;
     map->table[index].value = NULL;
     return 1;
@@ -59,7 +55,6 @@ int hashmap_remove(HashMap *map, const char* key){
 void hashmap_destroy(HashMap* map){
     for(int i; i<map->size; i++){
         free(map->table[i].key);
-        //le value on a besion de le free ? voir ligne 34.
         free(map->table[i].value);
     }
     free(map->table);
