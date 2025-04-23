@@ -94,6 +94,7 @@ void* resolve_addressing(CPU* cpu, const char* operand){
     if(matches("[A-Z]{2}", operand)) return register_addressing(cpu, operand);
     if(matches("\[[0-9]*\]", operand)) return memory_direct_addressing(cpu, operand);
     if(matches("\[[A-Z]{2}\]", operand)) return register_indirect_addressing(cpu, operand);
+    if(matches("\[[A-Z]{1}S:[A-Z]{2}\]", operand)) return segment_override_addressing(cpu, operand);
     return NULL;
 }
 
@@ -169,6 +170,13 @@ int handle_instruction(CPU* cpu, Instruction* instr, void* src, void* dest){
         }
         return 1;
     }
+    if(strcmp(instr->mnemonic, "ALLOC")==0){
+        alloc_es_segment(cpu);
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "FREE")==0){
+        free_ES_segment(cpu);
+    }
     return 0;
 }
 
@@ -177,4 +185,97 @@ int execute_instruction(CPU* cpu, Instruction *instr){
     void* addr2 = resolve_addressing(cpu, instr->operand2);
     handle_instruction(cpu, instr, addr1, addr2);
     return 0;
+}
+
+
+void* segment_override_addressing(CPU* cpu, const char* operand){
+    if(matches("\[[A-Z]{1}S:[A-Z]{2}\]", operand)){
+        char* tmp = strdup(operand);
+        char* segment_name = strdup(strtok(tmp, "[:]"));
+        char* registre_name = strdup(strtok(NULL, "[:]"));
+        free(tmp);
+
+        Segment* segment = hashmap_get(cpu->memory_handler->allocated, segment_name);
+        int* registre = hashmap_get(cpu->context, registre_name);
+
+        return cpu->memory_handler->memory[segment->start+*registre];
+    }
+    return NULL;
+}
+
+int find_free_address_strategy(MemoryHandler* handler, int size, int strategy){
+    Segment* list = handler->free_list;
+    
+
+    switch (strategy)
+    {
+    case 0:
+        //On recherche la premiere taille valide
+        while(list){
+            if(list->size > size){
+                return list->start;
+            }
+            list = list->next;
+        }
+        return -1;
+    case 1:
+        //On recherche la taille minimum
+        int addr_min = -1;
+        int size_min = list->size;
+        while(list){
+            if((list->size <= size_min) && (list->size >= size)){
+                //On a trouvé une nouvelle taille minimale et valide
+                addr_min = list->start;
+            }
+            list = list->next;
+        }
+        return addr_min;
+    case 2:
+        // On recherche la plus grande taille
+        int addr_max = list->start;
+        int size_max = list->size;
+        while(list){
+            if((list->size > size_max)){
+                addr_max = list->start;
+            }
+            list = list->next;
+        }
+        return addr_max;
+    default:
+        return -1;
+    }
+}
+
+int alloc_es_segment(CPU* cpu){
+    
+    int *ax = (int *)hashmap_get(cpu->context, "AX");
+    int *bx = (int *)hashmap_get(cpu->context, "BX");
+    int *zf = (int *)hashmap_get(cpu->context, "ZF");
+    int address = find_free_address_strategy(cpu->memory_handler, *ax, *bx);
+    if(address == -1){
+        //Cas d'échec de l'allocation
+        *zf = 1;
+        return -1;
+    }else{
+        //Allocation réussie
+        *zf = 0;
+    }
+
+    if(!create_segment(cpu->memory_handler, "ES", address, ax)) printf("Erreur lors de l'allocation de ES.\n");
+    
+    int *es = (int *)hashmap_get(cpu->context, "ES");
+    *es = address;  
+    return address;
+}
+
+int free_ES_segment(CPU* cpu){
+    Segment* es = hashmap_get(cpu->memory_handler->allocated, "ES");
+    if(!es) return 0;
+    for(int i=es->start; i<es->start+es->size; i++){
+        if(cpu->memory_handler->memory[i]) free(cpu->memory_handler->memory[i]);
+    }
+    remove_segment(cpu->memory_handler, "ES");
+    int *esr = (int *)hashmap_get(cpu->context, "ES");
+    *esr = -1;
+    return 1;
 }

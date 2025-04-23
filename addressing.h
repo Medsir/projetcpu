@@ -13,5 +13,7 @@ int handle_instruction(CPU* cpu, Instruction* instr, void* src, void* dest);
 int execute_instruction(CPU* cpu, Instruction *instr);
 Instruction* fetch_next_instruction(CPU* cpu);
 int run_program(CPU* cpu);
+void* segment_override_addressing(CPU* cpu, const char* operand);
+int find_free_address_strategy(MemoryHandler* handler, int size, int strategy);
 
 #endif

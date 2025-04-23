@@ -15,6 +15,7 @@ CPU *cpu_init(int memory_size){
     hashmap_insert(cpu->context, "SF", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "SP", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "BP", calloc(sizeof(int), 1));
+    hashmap_insert(cpu->context, "ES", calloc(sizeof(int), 1));
     cpu->constant_pool = hashmap_create();
 
     
@@ -27,6 +28,10 @@ CPU *cpu_init(int memory_size){
     Segment* ss = hashmap_get(cpu->memory_handler->allocated, "SS");
     *sp = ss->start;
     *bp = ss->start + ss->size -1; 
+
+    int* es = hashmap_get(cpu->context, "ES");
+    *es = -1;
+
     return cpu;
 }
 
