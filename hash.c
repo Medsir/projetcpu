@@ -7,7 +7,7 @@ unsigned long simple_hash(const char* str){
     int sum=0;
     int i=0;
     while(str[i] != '\0'){
-        sum+=(int)(str[i]);
+        sum+=(int)(str[i])*(int)(str[i]);
         i++;
     }
     return sum%TABLESIZE;

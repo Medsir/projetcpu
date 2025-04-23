@@ -147,6 +147,28 @@ int handle_instruction(CPU* cpu, Instruction* instr, void* src, void* dest){
         *ip = cs->start+cs->size;
         return 1;    
     }
+    if(strcmp(instr->mnemonic, "PUSH")==0){
+        if(instr->operand1 == NULL){
+            int* ax = (int*)hashmap_get(cpu->context,"AX");
+            push_value(cpu, *ax);
+        }
+        else{
+            int* constant = (int*)malloc(sizeof(int));
+            *constant = atoi(instr->operand2);
+            push_value(cpu, *constant);
+        }
+        return 1;
+    }
+    if(strcmp(instr->mnemonic, "POP")==0){
+        if(instr->operand1 == NULL){
+            int* ax = (int*)hashmap_get(cpu->context,"AX");
+            pop_value(cpu, ax);
+        }
+        else{
+            pop_value(cpu, (int*)hashmap_get(cpu->context, instr->operand1));  
+        }
+        return 1;
+    }
     return 0;
 }
 
@@ -155,23 +177,4 @@ int execute_instruction(CPU* cpu, Instruction *instr){
     void* addr2 = resolve_addressing(cpu, instr->operand2);
     handle_instruction(cpu, instr, addr1, addr2);
     return 0;
-}
-
-Instruction* fetch_next_instruction(CPU* cpu){
-    //Récupérer l'instruction actuelle
-    int* ip = (int*)hashmap_get(cpu->context,"IP");
-    
-    Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
-
-    //Verifier les dimensions
-    if(!cs) return NULL;
-    if((*ip >=cs->start + cs->size) || (*ip < cs->start)) return NULL;
-    if(*ip+1 >= cs->start + cs->size) return NULL;
-
-    *ip++;
-    return (Instruction*)cpu->memory_handler->memory[*ip];
-}
-
-int run_program(CPU* cpu){
-    
 }

@@ -57,6 +57,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     newSeg->next = NULL;
     
     if((freeSeg->start == start) && (freeSeg->size == size)){
+        
         //supprimer le free seg et relier
         if(prev){
             prev->next = freeSeg->next;
@@ -78,6 +79,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     if((freeSeg->start == start) && (freeSeg->size > size)){
         //reduire la taille du free seg à gauche
         freeSeg->start = freeSeg->start + newSeg->size;
+        freeSeg->size -= freeSeg->start;
         //inserer dans la hashmap
         hashmap_insert(handler->allocated, name, newSeg);
         return 1;

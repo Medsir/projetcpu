@@ -25,4 +25,7 @@ void allocate_variables(CPU *cpu, Instruction** data_instructions, int data_coun
 void print_data_segment(CPU* cpu);
 CPU* setup_test_environnement();
 int resolve_constants(ParserResult* result);
+Instruction* fetch_next_instruction(CPU* cpu);
+int push_value(CPU* cpu, int value);
+int pop_value(CPU* cpu, int* dest);
 #endif

@@ -13,7 +13,20 @@ CPU *cpu_init(int memory_size){
     hashmap_insert(cpu->context, "IP", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "ZF", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "SF", calloc(sizeof(int), 1));
+    hashmap_insert(cpu->context, "SP", calloc(sizeof(int), 1));
+    hashmap_insert(cpu->context, "BP", calloc(sizeof(int), 1));
     cpu->constant_pool = hashmap_create();
+
+    
+    create_segment(cpu->memory_handler, "SS", 0, 128);
+    create_segment(cpu->memory_handler, "DS", 128, 20);
+    create_segment(cpu->memory_handler, "CS", 148, 20);
+
+    int* sp = hashmap_get(cpu->context, "SP");
+    int* bp = hashmap_get(cpu->context, "BP");
+    Segment* ss = hashmap_get(cpu->memory_handler->allocated, "SS");
+    *sp = ss->start;
+    *bp = ss->start + ss->size -1; 
     return cpu;
 }
 
@@ -34,18 +47,33 @@ CPU* setup_test_environnement(){
     *bx = 6;
     *cx = 100;
     *dx = 0;
+
+    
     //Creer et initialiser le segment de données
     if(!hashmap_get(cpu->memory_handler->allocated, "DS")){
-        create_segment(cpu->memory_handler, "DS", 0, 20);
-        
-        //Initialiser le segment de donnees avec des valeurs de test
-        for(int i=0; i<10; i++){
-            int* value = (int*)malloc(sizeof(int));
-            *value = i*10 + 5; //Valeurs 5, 15, 25, 35
-            store(cpu->memory_handler, "DS", i, value);
-        }
-
+        create_segment(cpu->memory_handler, "DS", 128, 20);
     }
+    //Initialiser le segment de donnees avec des valeurs de test
+    for(int i=0; i<10; i++){
+        int* value = (int*)malloc(sizeof(int));
+        *value = i*10 + 5; //Valeurs 5, 15, 25, 35
+        store(cpu->memory_handler, "DS", i, value);
+    }
+
+
+    //Initialiser les instructions dans le code
+    if(!hashmap_get(cpu->memory_handler->allocated, "CS")){
+        create_segment(cpu->memory_handler, "CS", 148, 20);
+    }
+    Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
+    Instruction* instr = parse_code_instruction("start: MOV AX,x", cpu->memory_handler->allocated, 1);
+        
+    cpu->memory_handler->memory[cs->start] = instr;
+    cpu->memory_handler->memory[cs->start+1] = parse_code_instruction("loop: ADD AX,y", cpu->memory_handler->allocated, 1);
+    int *ip = (int *)hashmap_get(cpu->context, "IP");
+    *ip = cs->start;
+
+
     printf("Test environnement initialized.\n");
     return cpu;
 }
@@ -117,8 +145,10 @@ void print_data_segment(CPU* cpu){
     Segment* data = (Segment*)hashmap_get(cpu->memory_handler->allocated, "DS");
     if(!data) return;
     printf("---- PRINTING .DATA SEGMENT ---- \n");
-    for(int i=data->start; i<data->size; i++){
-        printf("[%s] ", (char*)cpu->memory_handler->memory[i]);
+    for(int i=data->start; i<data->start + data->size; i++){
+        if(cpu->memory_handler->memory[i]){
+            printf("[%d] ", *(int*)cpu->memory_handler->memory[i]);
+        }
     }
     printf("\nDimensions : [%d, %d]\n", data->start, data->start+data->size-1);
 }
@@ -216,3 +246,40 @@ void allocate_code_segment(CPU* cpu, Instruction** code_instructions, int code_c
     *ip = 0;
 }
 
+Instruction* fetch_next_instruction(CPU* cpu){
+    //Récupérer l'instruction actuelle
+    int* ip = (int*)hashmap_get(cpu->context,"IP");
+    
+    Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
+   
+    //Verifier les dimensions
+    if(!cs) return NULL;
+    if((*ip >=cs->start + cs->size) || (*ip < cs->start)) return NULL;
+    if(*ip+1 >= cs->start + cs->size) return NULL;
+    (*ip)++;
+    return (Instruction*)cpu->memory_handler->memory[*ip];
+}
+
+int push_value(CPU* cpu, int value){
+    int* sp = hashmap_get(cpu->context, "SP");
+    int* bp = hashmap_get(cpu->context, "BP");
+    Segment* ss = hashmap_get(cpu->memory_handler->allocated, "SS");
+    if(*sp == ss->size-1){
+        printf("[CPU ERROR] Stack overflow\n");
+        return -1;
+    }
+    store(cpu->memory_handler, "SS", *sp - ss->start, &value);
+    return 1;
+}
+
+int pop_value(CPU* cpu, int* dest){
+    int* sp = hashmap_get(cpu->context, "SP");
+    int* bp = hashmap_get(cpu->context, "BP");
+    Segment* ss = hashmap_get(cpu->memory_handler->allocated, "SS");
+    if(*bp == ss->start){
+        printf("[CPU ERROR] Stack underflow\n");
+        return -1;
+    }
+    *dest = *(int*)(load(cpu->memory_handler, "SS", *bp - ss->start));
+    return 1;
+}
