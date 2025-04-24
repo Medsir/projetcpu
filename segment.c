@@ -4,6 +4,7 @@
 
 
 MemoryHandler *memory_init(int size){
+    /* cette fonction permet  d’initialiser le gestionnaire de mémoire. */
     MemoryHandler* handler = (MemoryHandler*)malloc(sizeof(MemoryHandler));
     handler->total_size = size;
     handler->free_list = (Segment*)malloc(sizeof(Segment));
@@ -17,6 +18,7 @@ MemoryHandler *memory_init(int size){
 }
 
 void free_memory(MemoryHandler* mem){
+    /* cette fonction permet de libérer l'ensemble de mémoires */
     Segment* tmp = mem->free_list;
     while(tmp){
         mem->free_list = mem->free_list->next;
@@ -32,7 +34,9 @@ void free_memory(MemoryHandler* mem){
 }
 
 Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev){
+    /* cette fonction permet de savoir s'il est possible d'allouer un segment commençant à une position donnée */
     Segment* tmp = handler->free_list;
+    //s'il existe un segment libre
     while(tmp->next){
         if((tmp->next->start <= start) && (tmp->next->size >= start+size)){
             (*prev) = tmp;
@@ -41,10 +45,12 @@ Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment*
         tmp = tmp->next;
     }
     if(tmp) return tmp;
+    //sinon
     return NULL;
 }
 
 int create_segment(MemoryHandler *handler, const char *name, int start, int size){
+    /*  cette fonction permet d'allouer dynamiquement un segment de mémoire de taille size à l'adresse mémoire start. */
     Segment* prev = NULL;
     Segment* freeSeg = find_free_segment(handler, start, size, &prev);
     int total_free_size;
@@ -56,6 +62,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     newSeg->size = size;
     newSeg->next = NULL;
     
+    //en fonction des cas
     if((freeSeg->start == start) && (freeSeg->size == size)){
         
         //supprimer le free seg et relier
@@ -105,13 +112,15 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
 }
 
 void fusion_segments(Segment* s1, Segment*s2){
-    //on suppose que la fonction est correctement utilisée
+    /* cette fonction permet de fusionnner deux segements, on suppose que la fonction est correctement utilisée */
     s1->size = s1->size + s2->size;
     s1->next = s2->next;
+    //libérer un segment
     free(s2);
 }
 
 int remove_segment(MemoryHandler* handler, const char *name){
+    /* cette fonction permet de liérer un segment de mémoire alloué et de l'ajouter à la liste des segments libres  */
     Segment* toDelete = (Segment*)hashmap_get(handler->allocated, name);
     int delStart = toDelete->start;
     int delSize = toDelete->size;

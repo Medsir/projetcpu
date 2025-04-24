@@ -3,8 +3,11 @@
 #include <string.h>
 
 CPU *cpu_init(int memory_size){
+    /* cette fonction permet  d’initialiser le processeur simulé */
     CPU* cpu = (CPU*)malloc(sizeof(CPU));
+    //RAM
     cpu->memory_handler = memory_init(memory_size);
+    //registres
     cpu->context = hashmap_create();
     hashmap_insert(cpu->context, "AX", calloc(sizeof(int), 1));
     hashmap_insert(cpu->context, "BX", calloc(sizeof(int), 1));
@@ -18,7 +21,7 @@ CPU *cpu_init(int memory_size){
     hashmap_insert(cpu->context, "ES", calloc(sizeof(int), 1));
     cpu->constant_pool = hashmap_create();
 
-    
+
     create_segment(cpu->memory_handler, "SS", 0, 128);
     create_segment(cpu->memory_handler, "DS", 128, 20);
     create_segment(cpu->memory_handler, "CS", 148, 20);
@@ -84,6 +87,7 @@ CPU* setup_test_environnement(){
 }
 
 CPU* cpu_destroy(CPU* cpu){
+    /* cette fonction permet de libérer toutes les ressources allouées par le processeur simulé */
     free_memory(cpu->memory_handler);
     hashmap_destroy(cpu->context);
     hashmap_destroy(cpu->constant_pool);
@@ -92,6 +96,8 @@ CPU* cpu_destroy(CPU* cpu){
 }
 
 void* store(MemoryHandler *handler, const char *segment_name, int pos, void *data){
+    /* cette fonction permet de stocker une donnée data à la position pos de segment name, supposons segment name est bien un segment alloué, et que pos ne
+dépasse pas la taille du segment.*/
     Segment* seg = hashmap_get(handler->allocated, segment_name);
     if(seg){
         handler->memory[seg->start+pos] = data;
@@ -102,6 +108,7 @@ void* store(MemoryHandler *handler, const char *segment_name, int pos, void *dat
 }
 
 void* load(MemoryHandler *handler, const char* segment_name, int pos){
+    /* cette fonction permet de  de récupérer la donnée stockée à la position pos de segment name. */
     Segment* seg = hashmap_get(handler->allocated, segment_name);
     if(seg){
         return handler->memory[seg->start+pos];
@@ -111,6 +118,7 @@ void* load(MemoryHandler *handler, const char* segment_name, int pos){
 
 
 void allocate_variables(CPU *cpu, Instruction** data_instructions, int data_count){
+    /* cette foction permet d'allouer dynamiquement le segment de données en fonction des déclarations récupérées par le parser. */
     /*Calcul de l'espace nécessaire :*/
     int necessary_space = 0;
     
@@ -147,6 +155,7 @@ void allocate_variables(CPU *cpu, Instruction** data_instructions, int data_coun
 }
 
 void print_data_segment(CPU* cpu){
+    /*  cette fonction permet d'afficher le contenu du segment de données (nom "DS") */
     Segment* data = (Segment*)hashmap_get(cpu->memory_handler->allocated, "DS");
     if(!data) return;
     printf("---- PRINTING .DATA SEGMENT ---- \n");
@@ -221,6 +230,7 @@ int search_and_replace(char** str, HashMap *values){
 }
 
 int resolve_constants(ParserResult* result){
+    /* cette fonction remplace les variables par leur adresse dans le segment de données et les étiquettes par leur adresse dans le code. */
     Instruction* curr;
     int res = 0;
     for(int i=0; i<result->data_count; i++){
@@ -236,7 +246,7 @@ int resolve_constants(ParserResult* result){
 }
 
 void allocate_code_segment(CPU* cpu, Instruction** code_instructions, int code_count){
-
+    /* cette fonction alloue et initialise le segment de codes (CS).  */
     //Créer le segment .CODE
     create_segment(cpu->memory_handler, "CS", last_adress_used, code_count);
     last_adress_used += code_count;
@@ -252,6 +262,7 @@ void allocate_code_segment(CPU* cpu, Instruction** code_instructions, int code_c
 }
 
 Instruction* fetch_next_instruction(CPU* cpu){
+    /* cette fonction récupère l'instruction suivante dans le segment de codes et incrémente le pointeur d'instruction (IP). */
     //Récupérer l'instruction actuelle
     int* ip = (int*)hashmap_get(cpu->context,"IP");
     
@@ -266,6 +277,7 @@ Instruction* fetch_next_instruction(CPU* cpu){
 }
 
 int push_value(CPU* cpu, int value){
+    /* cette fonction empile une value */
     int* sp = hashmap_get(cpu->context, "SP");
     int* bp = hashmap_get(cpu->context, "BP");
     Segment* ss = hashmap_get(cpu->memory_handler->allocated, "SS");
@@ -278,6 +290,7 @@ int push_value(CPU* cpu, int value){
 }
 
 int pop_value(CPU* cpu, int* dest){
+    /* cette fonction récuère la dernière value */
     int* sp = hashmap_get(cpu->context, "SP");
     int* bp = hashmap_get(cpu->context, "BP");
     Segment* ss = hashmap_get(cpu->memory_handler->allocated, "SS");

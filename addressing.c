@@ -1,5 +1,6 @@
 #include "addressing.h"
 #include <string.h>
+
 int matches(const char *pattern, const char *string){
     regex_t regex;
     int result = regcomp(&regex, pattern, REG_EXTENDED);
@@ -13,6 +14,7 @@ int matches(const char *pattern, const char *string){
 }
 
 void* immediate_addressing(CPU* cpu, char* operand){
+    /* cette fonction permet de traiter l'adressage immédiat */
     if(matches("[0-9]*", operand)){
         void* data = hashmap_get(cpu->constant_pool, operand);
         if(!data){
@@ -32,6 +34,7 @@ void* immediate_addressing(CPU* cpu, char* operand){
 }
 
 void* register_addressing(CPU* cpu, const char* operand){
+    /* cette fonction permet de traiter l'adressage par registre. */
     if(matches("[A-Z]{2}", operand)){
         void* data = hashmap_get(cpu->context, operand);
         if(data){
@@ -45,6 +48,7 @@ void* register_addressing(CPU* cpu, const char* operand){
 }
 
 void* memory_direct_addressing(CPU* cpu, const char* operand){
+    /* cette fonction permet de traiter l'adressage direct par mémoire. */
     if(matches("\[[0-9]*\]", operand)){
         /*Extraction et conversion de l'adresse*/
         char* tmp = strdup(operand);
@@ -70,6 +74,7 @@ void* memory_direct_addressing(CPU* cpu, const char* operand){
 }
 
 void* register_indirect_addressing(CPU* cpu, const char* operand){
+    /* cette fonction permet de traiter l'adressage indirect par registre. */
     if(matches("\[[A-Z]{2}\]", operand)){
         char* tmp = strdup(operand);
         char* nom_registre = strdup(strtok(tmp, "[]"));
@@ -83,6 +88,7 @@ void* register_indirect_addressing(CPU* cpu, const char* operand){
 }
 
 void handle_MOV(CPU* cpu, void* src, void* dest){
+    /* cette fonction permet de simuler le comportement de l'instruction MOV en pseudo-assembleur. */
     /*Copier le contenu (supposé ici un entier) à l'emplacement src vers dest*/
     if(dest && src){
         memcpy(dest, src, sizeof(int));
@@ -90,6 +96,7 @@ void handle_MOV(CPU* cpu, void* src, void* dest){
 }
 
 void* resolve_addressing(CPU* cpu, const char* operand){
+    /* cette fonction permet d'identifier automatiquement le mode d'adressage d’un opérande et de résoudre sa valeur. */
     if(matches("[0-9]*", operand)) return immediate_addressing(cpu, operand);
     if(matches("[A-Z]{2}", operand)) return register_addressing(cpu, operand);
     if(matches("\[[0-9]*\]", operand)) return memory_direct_addressing(cpu, operand);
@@ -99,6 +106,7 @@ void* resolve_addressing(CPU* cpu, const char* operand){
 }
 
 int handle_instruction(CPU* cpu, Instruction* instr, void* src, void* dest){
+    /* cette fonction généralise la fonction handle MOV en permettant d'exécuter une instruction dans le CPU en fonction de son mnémonique. */
     if(strcmp(instr->mnemonic, "MOV")==0){
         handle_MOV(cpu, src, dest);
         return 1;
@@ -181,6 +189,7 @@ int handle_instruction(CPU* cpu, Instruction* instr, void* src, void* dest){
 }
 
 int execute_instruction(CPU* cpu, Instruction *instr){
+    /* cette fonction permet de résoudre les adresses des opérandes en fonction du type d'adressage, puis délègue l'exécution proprement dite à la fonction handle instruction. */
     void* addr1 = resolve_addressing(cpu, instr->operand1);
     void* addr2 = resolve_addressing(cpu, instr->operand2);
     handle_instruction(cpu, instr, addr1, addr2);
@@ -189,6 +198,7 @@ int execute_instruction(CPU* cpu, Instruction *instr){
 
 
 void* segment_override_addressing(CPU* cpu, const char* operand){
+    /* cette fonction récupère et retourne la donnée stockée dans le segment à la position spécifiée. */
     if(matches("\[[A-Z]{1}S:[A-Z]{2}\]", operand)){
         char* tmp = strdup(operand);
         char* segment_name = strdup(strtok(tmp, "[:]"));
@@ -204,6 +214,7 @@ void* segment_override_addressing(CPU* cpu, const char* operand){
 }
 
 int find_free_address_strategy(MemoryHandler* handler, int size, int strategy){
+    /* cette fonction permet de trouver le segment libre à utiliser selon la stratégie (0, 1 ou 2) spécifiée. */
     Segment* list = handler->free_list;
     
 
@@ -247,7 +258,7 @@ int find_free_address_strategy(MemoryHandler* handler, int size, int strategy){
 }
 
 int alloc_es_segment(CPU* cpu){
-    
+    /* cette fonction alloue dynamiquement un segment ES */
     int *ax = (int *)hashmap_get(cpu->context, "AX");
     int *bx = (int *)hashmap_get(cpu->context, "BX");
     int *zf = (int *)hashmap_get(cpu->context, "ZF");
@@ -269,6 +280,7 @@ int alloc_es_segment(CPU* cpu){
 }
 
 int free_ES_segment(CPU* cpu){
+    /* cette fonction r libère le segment ES  */
     Segment* es = hashmap_get(cpu->memory_handler->allocated, "ES");
     if(!es) return 0;
     for(int i=es->start; i<es->start+es->size; i++){
