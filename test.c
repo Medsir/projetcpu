@@ -77,5 +77,6 @@ int run_program(CPU* cpu){
 int main(){
     CPU* cpu = setup_test_environnement();
     run_program(cpu);
+    cpu_destroy(cpu);
     return 0;
 }
