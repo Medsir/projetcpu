@@ -27,6 +27,7 @@ Instruction* parse_data_instruction(const char *line, HashMap* memory_locations)
     char* token = strdup(strtok(tmp, ","));
     //trouver le nombre d'éléments
     while(token!=NULL){
+        free(token);
         elements_count++;
         token = strdup(strtok(NULL, ","));
         //*****libérer strdup*****
