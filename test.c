@@ -25,6 +25,8 @@ int run_program(CPU* cpu){
     print_data_segment(cpu);
     printf("\n");
 
+    /* Parser le data segment avec la fonction parse()*/
+
     Segment* code_seg = hashmap_get(cpu->memory_handler->allocated, "CS");
     if(!code_seg){
         printf("Segment code non initialise\n");
@@ -41,6 +43,7 @@ int run_program(CPU* cpu){
         }
     }
     Instruction* curr_inst = (Instruction*)cpu->memory_handler->memory[*ip];
+    printf("probleme : Nous n'avons pas pu tester les fonctions d'execution du code car la librairie regex.h n'est pas fournie dans notre libc sur windows\n");
     while (running){
         printf("Quitter (q) | Avancer (Entree)\n");
         input = getchar();
@@ -54,13 +57,10 @@ int run_program(CPU* cpu){
         case '\n':
             printf("--------------\n");
             if(curr_inst){
-                /*
-                à ajouter : executer l'instruction
+                //resolve constants
+                //execute instruction
 
-
-
-
-                */
+                /*continuer sur la prochaine instruction*/
                 printf("%s %s %s\n", curr_inst->mnemonic, curr_inst->operand1, curr_inst->operand2);
                 curr_inst = fetch_next_instruction(cpu);
             }
@@ -76,6 +76,6 @@ int run_program(CPU* cpu){
 
 int main(){
     CPU* cpu = setup_test_environnement();
-    //run_program(cpu);
+    run_program(cpu);
     return 0;
 }

@@ -22,8 +22,8 @@ addressing.o: addressing.c addressing.h
 main.o: main.c hash.h segment.h parser.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-main: main.o hash.o segment.o parser.o
-	$(CC) $(LDFLAGS) -o main hash.o segment.o parser.o
+main: hash.o parser.o segment.o test.o cpu.o
+	$(CC) -o main hash.o parser.o segment.o test.o cpu.o
 
 test.o: test.c hash.h segment.h parser.h cpu.h
 	$(CC) $(CFLAGS) -o $@ $<
