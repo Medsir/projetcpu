@@ -79,4 +79,38 @@ int main(){
     run_program(cpu);
     cpu_destroy(cpu);
     return 0;
+
+    /* test des performances (sans libérer la mémoire)*/
+    /*
+    FILE* f = fopen("perf.txt", "w");
+    HashMap* labels = hashmap_create();
+    HashMap* memory_locations = hashmap_create();
+    
+    clock_t temps_initial;
+    clock_t temps_final;
+    double temps_cpu;
+    Instruction* ci;
+    Instruction* di;
+
+    temps_initial = clock();
+    for(int i=0; i<1000; i++) ci = parse_code_instruction("start: MOV AX,x", labels, 1);
+    temps_final = clock();
+    temps_cpu = ((double)(temps_final-temps_initial));
+    fprintf(f, "Parse code : %.5f\n", temps_cpu/1000);
+
+
+    temps_initial = clock();
+    for(int i=0; i<1000; i++) di = parse_data_instruction("start: MOV AX,x", memory_locations);
+    temps_final = clock();
+    temps_cpu = ((double)(temps_final-temps_initial));
+    fprintf(f, "Parse data : %.5f\n", temps_cpu/1000);
+
+    temps_initial = clock();
+    for(int i=0; i<100; i++)parse("test_parse.txt");
+    temps_final = clock();
+    temps_cpu = ((double)(temps_final-temps_initial));
+    fprintf(f, "Parse data : %.5f\n", temps_cpu/100);
+    */
+
+    
 }
