@@ -17,7 +17,6 @@ unsigned long simple_hash(const char* str){
 HashMap* hashmap_create(){
     /*cette fonction permet d’allouer dynamiquement une table de hachage et d’initialiser ses cases à 0.*/
     HashMap* new = (HashMap*)malloc(sizeof(HashMap));
-    /*?? peut etre initialiser a 0 ?*/
     new->size = TABLESIZE;
     new->table = calloc(new->size, sizeof(HashEntry));
     return new;
@@ -55,7 +54,6 @@ int hashmap_remove(HashMap *map, const char* key){
     int index = simple_hash(key);
     free(map->table[index].key);
     free(map->table[index].value);
-    //*****on ne met pas à 0 ?*****
     map->table[index].key = NULL;
     map->table[index].value = NULL;
     return 1;
