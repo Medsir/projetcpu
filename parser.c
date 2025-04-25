@@ -30,7 +30,6 @@ Instruction* parse_data_instruction(const char *line, HashMap* memory_locations)
         free(token);
         elements_count++;
         token = strdup(strtok(NULL, ","));
-        //*****libérer strdup*****
         free(token);
     }
     //libérer tmp.
