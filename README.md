@@ -25,3 +25,16 @@ Ce projet universitaire consiste en la réalisation d'un simulateur d'unité cen
 - `JMP`, `JZ`, `JNZ` : Contrôle du flux d'exécution.
 - `PUSH`, `POP` : Gestion de la pile.
 - `ALLOC`, `FREE` : Gestion dynamique de l'Extra Segment (ES).
+
+## 🛠️ Compilation et Exécution
+
+Le projet est structuré de manière modulaire pour faciliter la maintenance et les tests. Un `Makefile` est fourni pour automatiser la gestion des dépendances.
+
+### Prérequis
+- Compilateur `gcc`
+- Bibliothèque standard `libc` (avec support `regex.h`)
+
+### Commandes
+- **Compiler l'application principale** :
+  ```bash
+  make main
